@@ -356,7 +356,7 @@ export default function App() {
               </div>
               <input 
                 type="range" 
-                min="15" 
+                min="3" 
                 max="60" 
                 value={totalQuestions} 
                 onChange={(e) => setTotalQuestions(parseInt(e.target.value))}
@@ -382,6 +382,7 @@ export default function App() {
                 outline: 'none'
               }}
             >
+              <option value="5">5 Minutos</option>
               <option value="15">15 Minutos</option>
               <option value="30">30 Minutos</option>
               <option value="45">45 Minutos</option>
