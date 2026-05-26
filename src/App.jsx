@@ -424,6 +424,9 @@ export default function App() {
             <div className="footer-links">
               <span className="footer-link" onClick={() => setShowPrivacy(true)}>Política de Privacidad</span>
             </div>
+            <p className="footer-disclaimer">
+              <strong>Aviso:</strong> Las preguntas y alternativas de este simulador fueron generadas y refinadas con el apoyo de Inteligencia Artificial. Aunque se han realizado esfuerzos por asegurar su rigurosidad legal, podrían contener imprecisiones o errores. Esta herramienta debe ser utilizada únicamente como una guía de estudio complementaria. Si encuentras algún error o inconsistencia en alguna pregunta, por favor no dudes en reportarlo utilizando el formulario de observaciones de la misma.
+            </p>
           </div>
         </div>
       )}

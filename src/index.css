@@ -693,3 +693,14 @@ textarea:focus {
   display: flex;
   justify-content: flex-end;
 }
+
+.footer-disclaimer {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: #475569;
+  line-height: 1.5;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
