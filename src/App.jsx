@@ -5,12 +5,29 @@ export default function App() {
   // App States: 'config' | 'loading' | 'quiz' | 'results'
   const [screen, setScreen] = useState('config')
   
-  // Config parameters
+  // Quiz configuration
   const [totalQuestions, setTotalQuestions] = useState(15)
-  const [timeLimit, setTimeLimit] = useState(30) // in minutes
+  const [timeLimit, setTimeLimit] = useState(30)
   const [correctionMode, setCorrectionMode] = useState('immediate') // 'immediate' | 'deferred'
-  
-  // Quiz states
+  const [selectedAreas, setSelectedAreas] = useState({
+    civil: true,
+    procesal: true,
+    constitucional: true
+  })
+
+  const toggleArea = (key) => {
+    setSelectedAreas(prev => {
+      const activeKeys = Object.keys(prev).filter(k => prev[k])
+      if (activeKeys.length === 1 && prev[key]) {
+        // Prevent deselecting the only active area
+        return prev
+      }
+      return {
+        ...prev,
+        [key]: !prev[key]
+      }
+    })
+  }
   const [questions, setQuestions] = useState([])
   const [currentIdx, setCurrentIdx] = useState(0)
   const [selectedOpt, setSelectedOpt] = useState(null)
@@ -116,14 +133,28 @@ export default function App() {
   }
 
   // Question Division logic (Priority Civil)
-  const getDistribution = (total) => {
-    const base = Math.floor(total / 3)
-    const remainder = total % 3
-    return {
-      civil: base + remainder,
-      procesal: base,
-      constitucional: base
+  const getDistribution = (total, selected) => {
+    const activeKeys = Object.keys(selected).filter(k => selected[k])
+    const count = activeKeys.length
+    
+    const dist = { civil: 0, procesal: 0, constitucional: 0 }
+    if (count === 0) return dist
+    
+    const base = Math.floor(total / count)
+    let remainder = total % count
+    
+    activeKeys.forEach(k => {
+      dist[k] = base
+    })
+    
+    const priority = ['civil', 'procesal', 'constitucional']
+    for (const k of priority) {
+      if (remainder > 0 && selected[k]) {
+        dist[k] += 1
+        remainder -= 1
+      }
     }
+    return dist
   }
 
   // Load questions from Supabase
@@ -131,7 +162,7 @@ export default function App() {
     setScreen('loading')
     setErrorMsg('')
     
-    const dist = getDistribution(totalQuestions)
+    const dist = getDistribution(totalQuestions, selectedAreas)
     
     try {
       // Helper function to call random RPC
@@ -149,11 +180,17 @@ export default function App() {
       let constQuestions = []
 
       try {
-        [civilQuestions, procesalQuestions, constQuestions] = await Promise.all([
-          fetchAreaRandom('DERECHO CIVIL', dist.civil),
-          fetchAreaRandom('DERECHO PROCESAL', dist.procesal),
-          fetchAreaRandom('DERECHO CONSTITUCIONAL', dist.constitucional)
-        ])
+        const promises = []
+        if (dist.civil > 0) {
+          promises.push(fetchAreaRandom('DERECHO CIVIL', dist.civil).then(res => civilQuestions = res))
+        }
+        if (dist.procesal > 0) {
+          promises.push(fetchAreaRandom('DERECHO PROCESAL', dist.procesal).then(res => procesalQuestions = res))
+        }
+        if (dist.constitucional > 0) {
+          promises.push(fetchAreaRandom('DERECHO CONSTITUCIONAL', dist.constitucional).then(res => constQuestions = res))
+        }
+        await Promise.all(promises)
       } catch (rpcErr) {
         console.warn("⚠️ RPC function failed, falling back to standard select query...", rpcErr)
         
@@ -171,11 +208,17 @@ export default function App() {
           return [...data].sort(() => Math.random() - 0.5).slice(0, limit)
         }
 
-        [civilQuestions, procesalQuestions, constQuestions] = await Promise.all([
-          fetchAreaFallback('DERECHO CIVIL', dist.civil),
-          fetchAreaFallback('DERECHO PROCESAL', dist.procesal),
-          fetchAreaFallback('DERECHO CONSTITUCIONAL', dist.constitucional)
-        ])
+        const fallbackPromises = []
+        if (dist.civil > 0) {
+          fallbackPromises.push(fetchAreaFallback('DERECHO CIVIL', dist.civil).then(res => civilQuestions = res))
+        }
+        if (dist.procesal > 0) {
+          fallbackPromises.push(fetchAreaFallback('DERECHO PROCESAL', dist.procesal).then(res => procesalQuestions = res))
+        }
+        if (dist.constitucional > 0) {
+          fallbackPromises.push(fetchAreaFallback('DERECHO CONSTITUCIONAL', dist.constitucional).then(res => constQuestions = res))
+        }
+        await Promise.all(fallbackPromises)
       }
 
       const allQuestions = [...civilQuestions, ...procesalQuestions, ...constQuestions]
@@ -319,10 +362,8 @@ export default function App() {
     
     return { score, correct, incorrect }
   }
-
   const stats = getScoreStats()
-  const dist = getDistribution(totalQuestions)
-
+  const dist = getDistribution(totalQuestions, selectedAreas)
   return (
     <div className="glass-panel">
       {/* 1. CONFIG SCREEN */}
@@ -343,6 +384,34 @@ export default function App() {
               {errorMsg}
             </div>
           )}
+
+          {/* Materias Selector */}
+          <div className="control-group">
+            <label>Materias a Evaluar</label>
+            <div className="subject-selectors">
+              <button 
+                type="button"
+                className={`subject-btn ${selectedAreas.civil ? 'active' : ''}`}
+                onClick={() => toggleArea('civil')}
+              >
+                Derecho Civil
+              </button>
+              <button 
+                type="button"
+                className={`subject-btn ${selectedAreas.procesal ? 'active' : ''}`}
+                onClick={() => toggleArea('procesal')}
+              >
+                Derecho Procesal
+              </button>
+              <button 
+                type="button"
+                className={`subject-btn ${selectedAreas.constitucional ? 'active' : ''}`}
+                onClick={() => toggleArea('constitucional')}
+              >
+                Derecho Constitucional
+              </button>
+            </div>
+          </div>
 
           {/* Question Count Slider */}
           <div className="control-group">
