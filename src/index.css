@@ -751,11 +751,25 @@ textarea:focus {
   margin-top: 1rem;
 }
 
+.dedication-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .dedicatoria {
   font-size: 0.75rem;
   color: #475569;
   font-style: italic;
   opacity: 0.85;
+}
+
+.by-judex {
+  font-size: 0.7rem;
+  color: #475569;
+  margin-top: 0.15rem;
+  font-weight: 500;
+  opacity: 0.8;
 }
 
 .visitor-counter {

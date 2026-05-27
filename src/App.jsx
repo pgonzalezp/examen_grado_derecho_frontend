@@ -529,8 +529,13 @@ export default function App() {
               <strong>Aviso:</strong> Las preguntas y alternativas de este simulador fueron generadas y refinadas con el apoyo de Inteligencia Artificial. Aunque se han realizado esfuerzos por asegurar su rigurosidad legal, podrían contener imprecisiones o errores. Esta herramienta debe ser utilizada únicamente como una guía de estudio complementaria. Si encuentras algún error o inconsistencia en alguna pregunta, por favor no dudes en reportarlo utilizando el formulario de observaciones de la misma.
             </p>
             <div className="footer-bottom-row">
-              <div className="dedicatoria">
-                Dedicado a Francisca Navarrete Aguilera
+              <div className="dedication-column">
+                <div className="dedicatoria">
+                  Dedicado a Francisca Navarrete Aguilera
+                </div>
+                <div className="by-judex">
+                  by Judex
+                </div>
               </div>
               {visitCount !== null && (
                 <div className="visitor-counter">
