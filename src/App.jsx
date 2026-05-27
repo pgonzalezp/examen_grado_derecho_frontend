@@ -51,6 +51,7 @@ export default function App() {
   // Modals / Overlays
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [visitCount, setVisitCount] = useState(null)
 
   // On mount, generate/fetch anonymous user ID
   useEffect(() => {
@@ -78,6 +79,36 @@ export default function App() {
     }
     fetchAnonId()
   }, [])
+
+  // Visit counter tracking
+  useEffect(() => {
+    if (!anonUserId) return
+
+    const registerAndGetVisits = async () => {
+      try {
+        const alreadyRegistered = sessionStorage.getItem('visita_registrada')
+        if (!alreadyRegistered) {
+          await supabase
+            .from('visitas')
+            .insert({ usuario_anonimo_id: anonUserId })
+          sessionStorage.setItem('visita_registrada', 'true')
+        }
+
+        // Get total visits count
+        const { count, error } = await supabase
+          .from('visitas')
+          .select('*', { count: 'exact', head: true })
+
+        if (!error && count !== null) {
+          setVisitCount(count)
+        }
+      } catch (e) {
+        console.error("Error al registrar/obtener visitas:", e)
+      }
+    }
+
+    registerAndGetVisits()
+  }, [anonUserId])
 
   // Manage Timer Countdown
   useEffect(() => {
@@ -497,6 +528,11 @@ export default function App() {
             <p className="footer-disclaimer">
               <strong>Aviso:</strong> Las preguntas y alternativas de este simulador fueron generadas y refinadas con el apoyo de Inteligencia Artificial. Aunque se han realizado esfuerzos por asegurar su rigurosidad legal, podrían contener imprecisiones o errores. Esta herramienta debe ser utilizada únicamente como una guía de estudio complementaria. Si encuentras algún error o inconsistencia en alguna pregunta, por favor no dudes en reportarlo utilizando el formulario de observaciones de la misma.
             </p>
+            {visitCount !== null && (
+              <div className="visitor-counter">
+                👁️ {visitCount.toLocaleString()} visitas
+              </div>
+            )}
           </div>
         </div>
       )}

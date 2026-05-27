@@ -744,3 +744,10 @@ textarea:focus {
   border-color: var(--primary-hover);
 }
 
+.visitor-counter {
+  text-align: right;
+  font-size: 0.75rem;
+  color: #475569;
+  margin-top: 0.75rem;
+  opacity: 0.85;
+}
