@@ -744,10 +744,22 @@ textarea:focus {
   border-color: var(--primary-hover);
 }
 
-.visitor-counter {
-  text-align: right;
+.footer-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.dedicatoria {
   font-size: 0.75rem;
   color: #475569;
-  margin-top: 0.75rem;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.visitor-counter {
+  font-size: 0.75rem;
+  color: #475569;
   opacity: 0.85;
 }
