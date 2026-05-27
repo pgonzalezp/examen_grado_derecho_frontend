@@ -530,7 +530,7 @@ export default function App() {
             </p>
             {visitCount !== null && (
               <div className="visitor-counter">
-                👁️ {visitCount.toLocaleString()} visitas
+                {visitCount.toLocaleString()} visitas
               </div>
             )}
           </div>
