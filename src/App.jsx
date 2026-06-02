@@ -3,28 +3,49 @@ import { supabase } from './supabase'
 
 const SUB_MATERIAS = {
   civil: [
-    { id: "1. TEORÍA GENERAL DE LA LEY.", label: "1. Teoría General de la Ley" },
-    { id: "2.-DE LAS PERSONAS.", label: "2. De las Personas" },
-    { id: "3.-TEORÍA GENERALDELnegocio jurídico.", label: "3. Teoría General del Negocio Jurídico" },
-    { id: "4.-DERECHOS REALES.", label: "4. Derechos Reales" },
-    { id: "5.-TEORÍA GENERAL DE LAS OBLIGACIONES.", label: "5. Teoría General de las Obligaciones" },
-    { id: "6.-LOS CONTRATOS.", label: "6. Los Contratos" },
-    { id: "7.-RESPONSABILIDAD EXTRACONTRACTUAL.", label: "7. Responsabilidad Extracontractual" },
-    { id: "8.- DERECHO DE FAMILIA.", label: "8. Derecho de Familia" },
-    { id: "9.-DERECHO SUCESORIO.", label: "9. Derecho Sucesorio" }
+    { id: "1. TEORÍA GENERAL DE LA LEY.", label: "1. Teoría General de la Ley", type: "tema" },
+    { id: "2.-DE LAS PERSONAS.", label: "2. De las Personas", type: "tema" },
+    { id: "3.-TEORÍA GENERALDELnegocio jurídico.", label: "3. Teoría General del Negocio Jurídico", type: "tema" },
+    { id: "4.-DERECHOS REALES.", label: "4. Derechos Reales", type: "tema" },
+    { id: "5.-TEORÍA GENERAL DE LAS OBLIGACIONES.", label: "5. Teoría General de las Obligaciones", type: "tema" },
+    { id: "6.-LOS CONTRATOS.", label: "6. Los Contratos", type: "tema" },
+    { id: "7.-RESPONSABILIDAD EXTRACONTRACTUAL.", label: "7. Responsabilidad Extracontractual", type: "tema" },
+    { id: "8.- DERECHO DE FAMILIA.", label: "8. Derecho de Familia", type: "tema" },
+    { id: "9.-DERECHO SUCESORIO.", label: "9. Derecho Sucesorio", type: "tema" }
   ],
   constitucional: [
-    { id: "1. Bases de la Institucionalidad", label: "1. Bases de la Institucionalidad" },
-    { id: "2.-Derechos y Garantias Constitucionales", label: "2. Derechos y Garantías Constitucionales" },
-    { id: "3.-Gobierno", label: "3. Gobierno" },
-    { id: "4.- Congreso Nacional.", label: "4. Congreso Nacional" },
-    { id: "5.-Tribunal Constitucional.", label: "5. Tribunal Constitucional" },
-    { id: "6.Aspectos fundamentales relativos a funciones de:", label: "6. Funciones de Órganos y otros" }
+    { id: "1. Bases de la Institucionalidad", label: "1. Bases de la Institucionalidad", type: "tema" },
+    { id: "2.-Derechos y Garantias Constitucionales", label: "2. Derechos y Garantías Constitucionales", type: "tema" },
+    { id: "3.-Gobierno", label: "3. Gobierno", type: "tema" },
+    { id: "4.- Congreso Nacional.", label: "4. Congreso Nacional", type: "tema" },
+    { id: "5.-Tribunal Constitucional.", label: "5. Tribunal Constitucional", type: "tema" },
+    { id: "6.Aspectos fundamentales relativos a funciones de:", label: "6. Funciones de Órganos y otros", type: "tema" }
   ],
   procesal: [
-    { id: "General", label: "1. Derecho Procesal General" },
-    { id: "2.DERECHO PROCESAL CIVIL", label: "2. Derecho Procesal Civil" },
-    { id: "3.DERECHO PROCESAL PENAL", label: "3. Derecho Procesal Penal" }
+    // Orgánico (General)
+    { id: "organico_jurisdiccion", label: "1. La Jurisdicción", type: "subtema", tema: "General", subtema: "La Jurisdicción" },
+    { id: "organico_competencia", label: "2. La Competencia", type: "subtema", tema: "General", subtema: "La Competencia" },
+    { id: "organico_tribunales", label: "3. Los Tribunales", type: "subtema", tema: "General", subtema: "Los Tribunales" },
+    { id: "organico_general", label: "4. Conceptos Generales (Orgánico)", type: "subtema", tema: "General", subtema: "General" },
+    
+    // Civil
+    { id: "civil_partes", label: "5. Las Partes (Procesal Civil)", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "Las Partes" },
+    { id: "civil_accion", label: "6. La Acción", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "La Acción" },
+    { id: "civil_reaccion", label: "7. La ReAcción", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "La ReAcción" },
+    { id: "civil_proceso", label: "8. El Proceso", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "El Proceso" },
+    { id: "civil_actuaciones", label: "9. Las Actuaciones Procesales", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "Las Actuaciones Procesales" },
+    { id: "civil_incidentes", label: "10. Los Incidentes", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "Los Incidentes" },
+    { id: "civil_ordinario", label: "11. Procedimiento Ordinario", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "El Procedimiento Civil Declarativo Ordinario" },
+    { id: "civil_sumario", label: "12. Procedimiento Sumario", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "El Procedimiento Sumario" },
+    { id: "civil_ejecutivo", label: "13. Procedimiento Ejecutivo", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "El Procedimiento ejecutivo" },
+    { id: "civil_cuaderno_ejecutivo", label: "14. Tramitación Cuaderno Ejecutivo", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "Tramitacion del Cuaderno ejecutivo:" },
+    { id: "civil_recursos", label: "15. Recursos Procesales Civiles", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "Los recursos Procesales Civiles" },
+
+    // Penal
+    { id: "penal_general", label: "16. Conceptos Generales (Procesal Penal)", type: "subtema", tema: "3.DERECHO PROCESAL PENAL", subtema: "General" },
+    { id: "penal_juicio_oral", label: "17. El Juicio Oral", type: "subtema", tema: "3.DERECHO PROCESAL PENAL", subtema: "6) EI Juicio Oral:" },
+    { id: "penal_recursos", label: "18. Recursos Procesales Penales", type: "subtema", tema: "3.DERECHO PROCESAL PENAL", subtema: "b) Los recursos Procesales Penales:" },
+    { id: "penal_procedimientos", label: "19. Procedimientos Especiales (Penal)", type: "subtema", tema: "3.DERECHO PROCESAL PENAL", subtema: "c) Procedimientos Especiales:" }
   ]
 };
 
@@ -326,10 +347,25 @@ export default function App() {
           .filter(subId => subDist[subId] > 0)
           .map(async (subId) => {
             const limit = subDist[subId];
-            const { data, error } = await supabase
-              .from('preguntas')
-              .select('*')
-              .eq('tema', subId)
+            
+            // Buscar la configuración del tema/subtema
+            let subObj = null;
+            for (const area of Object.keys(SUB_MATERIAS)) {
+              const match = SUB_MATERIAS[area].find(s => s.id === subId);
+              if (match) {
+                subObj = match;
+                break;
+              }
+            }
+            
+            let query = supabase.from('preguntas').select('*');
+            if (subObj && subObj.type === 'subtema') {
+              query = query.eq('tema', subObj.tema).eq('subtema', subObj.subtema);
+            } else {
+              query = query.eq('tema', subId);
+            }
+            
+            const { data, error } = await query
               .not('incorrecta_1', 'is', null)
               .limit(limit * 3);
             if (error) throw error;
