@@ -31,7 +31,7 @@ const SUB_MATERIAS = {
     // Civil
     { id: "civil_partes", label: "5. Las Partes (Procesal Civil)", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "Las Partes" },
     { id: "civil_accion", label: "6. La Acción", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "La Acción" },
-    { id: "civil_reaccion", label: "7. La ReAcción", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "La ReAcción" },
+    { id: "civil_reaccion", label: "7. La Reacción", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "La ReAcción" },
     { id: "civil_proceso", label: "8. El Proceso", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "El Proceso" },
     { id: "civil_actuaciones", label: "9. Las Actuaciones Procesales", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "Las Actuaciones Procesales" },
     { id: "civil_incidentes", label: "10. Los Incidentes", type: "subtema", tema: "2.DERECHO PROCESAL CIVIL", subtema: "Los Incidentes" },
