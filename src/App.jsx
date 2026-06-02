@@ -1,6 +1,51 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase'
 
+const SUB_MATERIAS = {
+  civil: [
+    { id: "1. TEORÍA GENERAL DE LA LEY.", label: "1. Teoría General de la Ley" },
+    { id: "2.-DE LAS PERSONAS.", label: "2. De las Personas" },
+    { id: "3.-TEORÍA GENERALDELnegocio jurídico.", label: "3. Teoría General del Negocio Jurídico" },
+    { id: "4.-DERECHOS REALES.", label: "4. Derechos Reales" },
+    { id: "5.-TEORÍA GENERAL DE LAS OBLIGACIONES.", label: "5. Teoría General de las Obligaciones" },
+    { id: "6.-LOS CONTRATOS.", label: "6. Los Contratos" },
+    { id: "7.-RESPONSABILIDAD EXTRACONTRACTUAL.", label: "7. Responsabilidad Extracontractual" },
+    { id: "8.- DERECHO DE FAMILIA.", label: "8. Derecho de Familia" },
+    { id: "9.-DERECHO SUCESORIO.", label: "9. Derecho Sucesorio" }
+  ],
+  constitucional: [
+    { id: "1. Bases de la Institucionalidad", label: "1. Bases de la Institucionalidad" },
+    { id: "2.-Derechos y Garantias Constitucionales", label: "2. Derechos y Garantías Constitucionales" },
+    { id: "3.-Gobierno", label: "3. Gobierno" },
+    { id: "4.- Congreso Nacional.", label: "4. Congreso Nacional" },
+    { id: "5.-Tribunal Constitucional.", label: "5. Tribunal Constitucional" },
+    { id: "6.Aspectos fundamentales relativos a funciones de:", label: "6. Funciones de Órganos y otros" }
+  ],
+  procesal: [
+    { id: "General", label: "1. Derecho Procesal General" },
+    { id: "2.DERECHO PROCESAL CIVIL", label: "2. Derecho Procesal Civil" },
+    { id: "3.DERECHO PROCESAL PENAL", label: "3. Derecho Procesal Penal" }
+  ]
+};
+
+const getSubmateriaDistribution = (total, selectedList) => {
+  const count = selectedList.length
+  const dist = {}
+  if (count === 0) return dist
+  
+  const base = Math.floor(total / count)
+  let remainder = total % count
+  
+  selectedList.forEach(item => {
+    dist[item] = base
+  })
+  
+  for (let i = 0; i < remainder; i++) {
+    dist[selectedList[i]] += 1
+  }
+  return dist
+}
+
 export default function App() {
   // App States: 'config' | 'loading' | 'quiz' | 'results'
   const [screen, setScreen] = useState('config')
@@ -15,6 +60,45 @@ export default function App() {
     constitucional: true
   })
 
+  // State for sub-subjects selection (checked by default)
+  const [selectedSubmaterias, setSelectedSubmaterias] = useState(() => {
+    const initial = {}
+    Object.keys(SUB_MATERIAS).forEach(area => {
+      SUB_MATERIAS[area].forEach(sub => {
+        initial[sub.id] = true
+      })
+    })
+    return initial
+  })
+
+  // Dynamic limits based on sub-subjects filtering
+  const activeAreas = Object.keys(selectedAreas).filter(area => selectedAreas[area]);
+  const availableSubmaterias = [];
+  activeAreas.forEach(area => {
+    SUB_MATERIAS[area].forEach(sub => {
+      availableSubmaterias.push(sub.id);
+    });
+  });
+
+  const activeSelectedSubmaterias = availableSubmaterias.filter(id => selectedSubmaterias[id]);
+  const isFilteredMode = activeSelectedSubmaterias.length < availableSubmaterias.length;
+
+  const minQuestions = isFilteredMode ? 1 : 3;
+  const maxQuestions = isFilteredMode ? 15 : 60;
+
+  // Auto-adjust questions count when slider bounds change
+  useEffect(() => {
+    if (isFilteredMode) {
+      if (totalQuestions > 15) {
+        setTotalQuestions(15);
+      }
+    } else {
+      if (totalQuestions < 3) {
+        setTotalQuestions(3);
+      }
+    }
+  }, [isFilteredMode, totalQuestions]);
+
   const toggleArea = (key) => {
     setSelectedAreas(prev => {
       const activeKeys = Object.keys(prev).filter(k => prev[k])
@@ -22,12 +106,48 @@ export default function App() {
         // Prevent deselecting the only active area
         return prev
       }
+      
+      const newActiveState = !prev[key];
+      
+      // Sync sub-subjects: check/uncheck all of this area
+      setSelectedSubmaterias(subPrev => {
+        const next = { ...subPrev };
+        SUB_MATERIAS[key].forEach(sub => {
+          next[sub.id] = newActiveState;
+        });
+        return next;
+      });
+
       return {
         ...prev,
-        [key]: !prev[key]
+        [key]: newActiveState
       }
     })
   }
+
+  const toggleSubmateria = (subId, areaKey) => {
+    setSelectedSubmaterias(prev => {
+      // Prevent deselecting the last active subtopic across all active areas
+      const activeAreasList = Object.keys(selectedAreas).filter(k => selectedAreas[k]);
+      const available = [];
+      activeAreasList.forEach(a => {
+        SUB_MATERIAS[a].forEach(sub => {
+          available.push(sub.id);
+        });
+      });
+      const selected = available.filter(id => id === subId ? !prev[id] : prev[id]);
+      
+      if (selected.length === 0) {
+        return prev;
+      }
+      
+      return {
+        ...prev,
+        [subId]: !prev[subId]
+      };
+    });
+  };
+
   const [questions, setQuestions] = useState([])
   const [currentIdx, setCurrentIdx] = useState(0)
   const [selectedOpt, setSelectedOpt] = useState(null)
@@ -193,69 +313,93 @@ export default function App() {
     setScreen('loading')
     setErrorMsg('')
     
-    const dist = getDistribution(totalQuestions, selectedAreas)
-    
     try {
-      // Helper function to call random RPC
-      const fetchAreaRandom = async (area, limit) => {
-        const { data, error } = await supabase.rpc('obtener_preguntas_aleatorias', {
-          p_area: area,
-          p_limite: limit
-        })
-        if (error) throw error
-        return data
-      }
-
-      let civilQuestions = []
-      let procesalQuestions = []
-      let constQuestions = []
-
-      try {
-        const promises = []
-        if (dist.civil > 0) {
-          promises.push(fetchAreaRandom('DERECHO CIVIL', dist.civil).then(res => civilQuestions = res))
-        }
-        if (dist.procesal > 0) {
-          promises.push(fetchAreaRandom('DERECHO PROCESAL', dist.procesal).then(res => procesalQuestions = res))
-        }
-        if (dist.constitucional > 0) {
-          promises.push(fetchAreaRandom('DERECHO CONSTITUCIONAL', dist.constitucional).then(res => constQuestions = res))
-        }
-        await Promise.all(promises)
-      } catch (rpcErr) {
-        console.warn("⚠️ RPC function failed, falling back to standard select query...", rpcErr)
+      let allQuestions = [];
+      
+      if (isFilteredMode) {
+        // Modo Filtrado: Consultas dirigidas por tema
+        const subDist = getSubmateriaDistribution(totalQuestions, activeSelectedSubmaterias);
+        const fetchPromises = Object.keys(subDist)
+          .filter(subId => subDist[subId] > 0)
+          .map(async (subId) => {
+            const limit = subDist[subId];
+            const { data, error } = await supabase
+              .from('preguntas')
+              .select('*')
+              .eq('tema', subId)
+              .not('incorrecta_1', 'is', null)
+              .limit(limit * 3);
+            if (error) throw error;
+            return [...data].sort(() => Math.random() - 0.5).slice(0, limit);
+          });
         
-        // Fallback standard select
-        const fetchAreaFallback = async (area, limit) => {
-          const { data, error } = await supabase
-            .from('preguntas')
-            .select('*')
-            .eq('area', area)
-            .not('incorrecta_1', 'is', null)
-            .limit(limit * 2) // Fetch a bit extra to randomize locally
+        const results = await Promise.all(fetchPromises);
+        allQuestions = results.flat();
+      } else {
+        // Modo Completo (flujo original)
+        const dist = getDistribution(totalQuestions, selectedAreas)
+        
+        // Helper function to call random RPC
+        const fetchAreaRandom = async (area, limit) => {
+          const { data, error } = await supabase.rpc('obtener_preguntas_aleatorias', {
+            p_area: area,
+            p_limite: limit
+          })
           if (error) throw error
+          return data
+        }
+
+        let civilQuestions = []
+        let procesalQuestions = []
+        let constQuestions = []
+
+        try {
+          const promises = []
+          if (dist.civil > 0) {
+            promises.push(fetchAreaRandom('DERECHO CIVIL', dist.civil).then(res => civilQuestions = res))
+          }
+          if (dist.procesal > 0) {
+            promises.push(fetchAreaRandom('DERECHO PROCESAL', dist.procesal).then(res => procesalQuestions = res))
+          }
+          if (dist.constitucional > 0) {
+            promises.push(fetchAreaRandom('DERECHO CONSTITUCIONAL', dist.constitucional).then(res => constQuestions = res))
+          }
+          await Promise.all(promises)
+        } catch (rpcErr) {
+          console.warn("⚠️ RPC function failed, falling back to standard select query...", rpcErr)
           
-          // Randomize subset
-          return [...data].sort(() => Math.random() - 0.5).slice(0, limit)
+          // Fallback standard select
+          const fetchAreaFallback = async (area, limit) => {
+            const { data, error } = await supabase
+              .from('preguntas')
+              .select('*')
+              .eq('area', area)
+              .not('incorrecta_1', 'is', null)
+              .limit(limit * 2) // Fetch a bit extra to randomize locally
+            if (error) throw error
+            
+            // Randomize subset
+            return [...data].sort(() => Math.random() - 0.5).slice(0, limit)
+          }
+
+          const fallbackPromises = []
+          if (dist.civil > 0) {
+            fallbackPromises.push(fetchAreaFallback('DERECHO CIVIL', dist.civil).then(res => civilQuestions = res))
+          }
+          if (dist.procesal > 0) {
+            fallbackPromises.push(fetchAreaFallback('DERECHO PROCESAL', dist.procesal).then(res => procesalQuestions = res))
+          }
+          if (dist.constitucional > 0) {
+            fallbackPromises.push(fetchAreaFallback('DERECHO CONSTITUCIONAL', dist.constitucional).then(res => constQuestions = res))
+          }
+          await Promise.all(fallbackPromises)
         }
 
-        const fallbackPromises = []
-        if (dist.civil > 0) {
-          fallbackPromises.push(fetchAreaFallback('DERECHO CIVIL', dist.civil).then(res => civilQuestions = res))
-        }
-        if (dist.procesal > 0) {
-          fallbackPromises.push(fetchAreaFallback('DERECHO PROCESAL', dist.procesal).then(res => procesalQuestions = res))
-        }
-        if (dist.constitucional > 0) {
-          fallbackPromises.push(fetchAreaFallback('DERECHO CONSTITUCIONAL', dist.constitucional).then(res => constQuestions = res))
-        }
-        await Promise.all(fallbackPromises)
+        allQuestions = [...civilQuestions, ...procesalQuestions, ...constQuestions]
       }
-
-      const allQuestions = [...civilQuestions, ...procesalQuestions, ...constQuestions]
       
       if (allQuestions.length === 0) {
-        throw new Error("No se encontraron preguntas en la base de datos. Verifica la importación del CSV.")
+        throw new Error("No se encontraron preguntas en la base de datos. Verifica la importación del CSV o las submaterias seleccionadas.")
       }
 
       // Shuffle complete quiz order
@@ -444,6 +588,41 @@ export default function App() {
             </div>
           </div>
 
+          {/* Submaterias Selector */}
+          {activeAreas.length > 0 && (
+            <div className="control-group submaterias-section">
+              <label>Seleccionar Temas Específicos (Submaterias)</label>
+              <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: '#64748b' }}>
+                Todas las submaterias están activas por defecto (Evaluación Completa, máx 60 preguntas). Desmarca alguna para enfocar tu estudio (Evaluación Filtrada, máx 15 preguntas).
+              </p>
+              
+              <div className="submaterias-grid">
+                {activeAreas.map(areaKey => (
+                  <div key={areaKey} className="submateria-column">
+                    <h4 className="column-title">
+                      {areaKey === 'civil' ? 'Derecho Civil' : areaKey === 'procesal' ? 'Derecho Procesal' : 'Derecho Constitucional'}
+                    </h4>
+                    <div className="submateria-list">
+                      {SUB_MATERIAS[areaKey].map(sub => (
+                        <label 
+                          key={sub.id} 
+                          className={`submateria-label ${selectedSubmaterias[sub.id] ? 'selected' : ''}`}
+                        >
+                          <input 
+                            type="checkbox"
+                            checked={!!selectedSubmaterias[sub.id]}
+                            onChange={() => toggleSubmateria(sub.id, areaKey)}
+                          />
+                          <span>{sub.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Question Count Slider */}
           <div className="control-group">
             <label>Cantidad de Preguntas</label>
@@ -451,13 +630,16 @@ export default function App() {
               <div className="slider-val">
                 <span className="slider-number">{totalQuestions}</span>
                 <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                  ({dist.civil} Civil | {dist.procesal} Procesal | {dist.constitucional} Const.)
+                  {isFilteredMode 
+                    ? `(${activeSelectedSubmaterias.length} submaterias activas)`
+                    : `(${dist.civil} Civil | ${dist.procesal} Procesal | ${dist.constitucional} Const.)`
+                  }
                 </span>
               </div>
               <input 
                 type="range" 
-                min="3" 
-                max="60" 
+                min={minQuestions} 
+                max={maxQuestions} 
                 value={totalQuestions} 
                 onChange={(e) => setTotalQuestions(parseInt(e.target.value))}
               />
