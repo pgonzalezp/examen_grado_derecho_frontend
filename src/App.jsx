@@ -71,6 +71,9 @@ export default function App() {
     return initial
   })
 
+  // State to control expansion of submaterias list
+  const [showSubmaterias, setShowSubmaterias] = useState(false)
+
   // Dynamic limits based on sub-subjects filtering
   const activeAreas = Object.keys(selectedAreas).filter(area => selectedAreas[area]);
   const availableSubmaterias = [];
@@ -591,35 +594,72 @@ export default function App() {
           {/* Submaterias Selector */}
           {activeAreas.length > 0 && (
             <div className="control-group submaterias-section">
-              <label>Seleccionar Temas Específicos (Submaterias)</label>
-              <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: '#64748b' }}>
-                Todas las submaterias están activas por defecto (Evaluación Completa, máx 60 preguntas). Desmarca alguna para enfocar tu estudio (Evaluación Filtrada, máx 15 preguntas).
-              </p>
+              <button
+                type="button"
+                className={`subject-btn ${showSubmaterias ? 'active' : ''}`}
+                onClick={() => setShowSubmaterias(!showSubmaterias)}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '0.85rem 1.25rem',
+                  fontSize: '0.95rem',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  borderRadius: '12px',
+                  color: '#cbd5e1',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
+                }}
+              >
+                <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  ⚙️ {showSubmaterias ? 'Ocultar Temas Específicos (Submaterias)' : 'Personalizar Temas Específicos (Submaterias)'}
+                </span>
+                <span style={{ fontSize: '0.8rem', color: '#818cf8', fontWeight: 600 }}>
+                  {showSubmaterias ? '▲ Ocultar' : '▼ Mostrar'}
+                </span>
+              </button>
               
-              <div className="submaterias-grid">
-                {activeAreas.map(areaKey => (
-                  <div key={areaKey} className="submateria-column">
-                    <h4 className="column-title">
-                      {areaKey === 'civil' ? 'Derecho Civil' : areaKey === 'procesal' ? 'Derecho Procesal' : 'Derecho Constitucional'}
-                    </h4>
-                    <div className="submateria-list">
-                      {SUB_MATERIAS[areaKey].map(sub => (
-                        <label 
-                          key={sub.id} 
-                          className={`submateria-label ${selectedSubmaterias[sub.id] ? 'selected' : ''}`}
-                        >
-                          <input 
-                            type="checkbox"
-                            checked={!!selectedSubmaterias[sub.id]}
-                            onChange={() => toggleSubmateria(sub.id, areaKey)}
-                          />
-                          <span>{sub.label}</span>
-                        </label>
-                      ))}
-                    </div>
+              {showSubmaterias && (
+                <div style={{
+                  marginTop: '1rem',
+                  background: 'rgba(255, 255, 255, 0.01)',
+                  border: '1px solid rgba(255, 255, 255, 0.03)',
+                  borderRadius: '16px',
+                  padding: '1.25rem',
+                  animation: 'slideDown 0.3s ease'
+                }}>
+                  <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: '#64748b' }}>
+                    Todas las submaterias están activas por defecto (Evaluación Completa, máx 60 preguntas). Desmarca alguna para enfocar tu estudio (Evaluación Filtrada, máx 15 preguntas).
+                  </p>
+                  
+                  <div className="submaterias-grid">
+                    {activeAreas.map(areaKey => (
+                      <div key={areaKey} className="submateria-column">
+                        <h4 className="column-title">
+                          {areaKey === 'civil' ? 'Derecho Civil' : areaKey === 'procesal' ? 'Derecho Procesal' : 'Derecho Constitucional'}
+                        </h4>
+                        <div className="submateria-list">
+                          {SUB_MATERIAS[areaKey].map(sub => (
+                            <label 
+                              key={sub.id} 
+                              className={`submateria-label ${selectedSubmaterias[sub.id] ? 'selected' : ''}`}
+                            >
+                              <input 
+                                type="checkbox"
+                                checked={!!selectedSubmaterias[sub.id]}
+                                onChange={() => toggleSubmateria(sub.id, areaKey)}
+                              />
+                              <span>{sub.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           )}
 
