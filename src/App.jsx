@@ -67,6 +67,83 @@ const getSubmateriaDistribution = (total, selectedList) => {
   return dist
 }
 
+// Componente de formulario de feedback individual para cada pregunta en la revisión
+function FeedbackForm({ questionId, anonUserId }) {
+  const [feedbackPregunta, setFeedbackPregunta] = useState('')
+  const [feedbackRespuesta, setFeedbackRespuesta] = useState('')
+  const [feedbackEnviado, setFeedbackEnviado] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const handleSendFeedbackLocal = async () => {
+    if (!feedbackPregunta && !feedbackRespuesta) return
+    setLoading(true)
+    try {
+      const { error } = await supabase
+        .from('feedbacks')
+        .insert({
+          pregunta_id: questionId,
+          usuario_anonimo_id: anonUserId,
+          feedback_pregunta: feedbackPregunta || null,
+          feedback_respuesta: feedbackRespuesta || null
+        })
+        
+      if (error) throw error
+      setFeedbackEnviado(true)
+    } catch (err) {
+      console.error("Error al enviar feedback:", err)
+      alert("No se pudo enviar el feedback. Revisa la consola o configuración de Supabase.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="feedback-box" style={{ background: 'rgba(0,0,0,0.15)' }}>
+      <div className="feedback-header" style={{ fontSize: '0.9rem' }}>
+        📝 Reportar sugerencias para esta pregunta
+      </div>
+      
+      {feedbackEnviado ? (
+        <div style={{ padding: '0.5rem', background: 'var(--success-glow)', border: '1px solid var(--success)', borderRadius: '8px', color: '#34d399', fontSize: '0.85rem', textAlign: 'center' }}>
+          ✔️ Retroalimentación guardada.
+        </div>
+      ) : (
+        <div>
+          <div className="feedback-inputs" style={{ gap: '0.75rem' }}>
+            <div>
+              <textarea 
+                placeholder="Reportar error en enunciado..."
+                value={feedbackPregunta}
+                onChange={(e) => setFeedbackPregunta(e.target.value)}
+                style={{ minHeight: '60px', fontSize: '0.85rem' }}
+              />
+            </div>
+            <div>
+              <textarea 
+                placeholder="Reportar error en alternativas..."
+                value={feedbackRespuesta}
+                onChange={(e) => setFeedbackRespuesta(e.target.value)}
+                style={{ minHeight: '60px', fontSize: '0.85rem' }}
+              />
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button 
+              className="btn-outline" 
+              onClick={handleSendFeedbackLocal}
+              disabled={loading || (!feedbackPregunta && !feedbackRespuesta)}
+              style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}
+            >
+              {loading ? 'Enviando...' : 'Enviar Reporte'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+
 export default function App() {
   // App States: 'config' | 'loading' | 'quiz' | 'results'
   const [screen, setScreen] = useState('config')
@@ -1018,101 +1095,52 @@ export default function App() {
             }
           </p>
 
-          {/* Review Panel for Deferred Mode */}
-          {correctionMode === 'deferred' && (
-            <div className="review-section">
-              <h2>Revisión de Preguntas y Feedback</h2>
-              <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                Revisa las alternativas correctas y envía tus observaciones sobre cada pregunta si detectas errores conceptuales.
-              </p>
+          {/* Review Panel for Both Modes */}
+          <div className="review-section">
+            <h2>Revisión de Preguntas y Feedback</h2>
+            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+              Revisa las alternativas correctas y envía tus observaciones sobre cada pregunta si detectas errores conceptuales.
+            </p>
 
-              {questions.map((q, idx) => {
-                const ans = userAnswers[idx] || { selectedIndex: null, isCorrect: false, options: [] }
-                const correctText = q.respuesta_correcta
-                const userSelectedText = ans.selectedIndex !== null && ans.options[ans.selectedIndex] 
-                  ? ans.options[ans.selectedIndex].text 
-                  : "Sin respuesta"
+            {questions.map((q, idx) => {
+              const ans = userAnswers[idx] || { selectedIndex: null, isCorrect: false, options: [] }
+              const correctText = q.respuesta_correcta
+              const userSelectedText = ans.selectedIndex !== null && ans.options[ans.selectedIndex] 
+                ? ans.options[ans.selectedIndex].text 
+                : "Sin respuesta"
 
-                return (
-                  <div key={idx} className="review-item">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.75rem' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Pregunta {idx + 1} &bull; {q.area}
-                      </span>
-                      <span style={{ fontSize: '0.85rem', color: '#cbd5e1', fontWeight: 500 }}>
-                        {q.tema} {q.subtema && `› ${q.subtema}`}
-                      </span>
-                    </div>
-                    <h4 style={{ margin: '0 0 1rem 0', color: '#f1f5f9', fontSize: '1.05rem', fontWeight: 600 }}>
-                      {q.pregunta}
-                    </h4>
-
-                    {/* User selection display */}
-                    <div className={`review-answer ${ans.isCorrect ? 'correct' : 'incorrect'}`}>
-                      <strong>Tu Respuesta:</strong> {userSelectedText}
-                    </div>
-
-                    {/* Correct response display if user was wrong */}
-                    {!ans.isCorrect && (
-                      <div className="review-answer correct" style={{ marginTop: '0.5rem' }}>
-                        <strong>Respuesta Correcta:</strong> {correctText}
-                      </div>
-                    )}
-
-                    {/* Feedback Form for each question in results screen */}
-                    <div className="feedback-box" style={{ background: 'rgba(0,0,0,0.15)' }}>
-                      <div className="feedback-header" style={{ fontSize: '0.9rem' }}>
-                        📝 Reportar sugerencias para esta pregunta
-                      </div>
-                      
-                      {feedbackEnviado && feedbackIdPregunta === q.id ? (
-                        <div style={{ padding: '0.5rem', background: 'var(--success-glow)', border: '1px solid var(--success)', borderRadius: '8px', color: '#34d399', fontSize: '0.85rem', textAlign: 'center' }}>
-                          ✔️ Retroalimentación guardada.
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="feedback-inputs" style={{ gap: '0.75rem' }}>
-                            <div>
-                              <textarea 
-                                placeholder="Reportar error en enunciado..."
-                                value={feedbackIdPregunta === q.id ? feedbackPregunta : undefined}
-                                onChange={(e) => {
-                                  setFeedbackIdPregunta(q.id)
-                                  setFeedbackPregunta(e.target.value)
-                                }}
-                                style={{ minHeight: '60px', fontSize: '0.85rem' }}
-                              />
-                            </div>
-                            <div>
-                              <textarea 
-                                placeholder="Reportar error en alternativas..."
-                                value={feedbackIdPregunta === q.id ? feedbackRespuesta : undefined}
-                                onChange={(e) => {
-                                  setFeedbackIdPregunta(q.id)
-                                  setFeedbackRespuesta(e.target.value)
-                                }}
-                                style={{ minHeight: '60px', fontSize: '0.85rem' }}
-                              />
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <button 
-                              className="btn-outline" 
-                              onClick={() => handleSendFeedback(q.id)}
-                              disabled={feedbackIdPregunta !== q.id || (!feedbackPregunta && !feedbackRespuesta)}
-                              style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}
-                            >
-                              Enviar Reporte
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+              return (
+                <div key={idx} className="review-item">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Pregunta {idx + 1} &bull; {q.area}
+                    </span>
+                    <span style={{ fontSize: '0.85rem', color: '#cbd5e1', fontWeight: 500 }}>
+                      {q.tema} {q.subtema && `› ${q.subtema}`}
+                    </span>
                   </div>
-                )
-              })}
-            </div>
-          )}
+                  <h4 style={{ margin: '0 0 1rem 0', color: '#f1f5f9', fontSize: '1.05rem', fontWeight: 600 }}>
+                    {q.pregunta}
+                  </h4>
+
+                  {/* User selection display */}
+                  <div className={`review-answer ${ans.isCorrect ? 'correct' : 'incorrect'}`}>
+                    <strong>Tu Respuesta:</strong> {userSelectedText}
+                  </div>
+
+                  {/* Correct response display if user was wrong */}
+                  {!ans.isCorrect && (
+                    <div className="review-answer correct" style={{ marginTop: '0.5rem' }}>
+                      <strong>Respuesta Correcta:</strong> {correctText}
+                    </div>
+                  )}
+
+                  {/* Feedback Form for each question in results screen */}
+                  <FeedbackForm questionId={q.id} anonUserId={anonUserId} />
+                </div>
+              )
+            })}
+          </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginTop: '3rem' }}>
             <button className="btn-primary" onClick={handleRestart}>
