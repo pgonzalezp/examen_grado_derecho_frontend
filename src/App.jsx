@@ -660,6 +660,20 @@ export default function App() {
       {/* 1. CONFIG SCREEN */}
       {screen === 'config' && (
         <div>
+          <div className="migration-banner">
+            <p className="migration-banner-text">
+              📢 <strong>Migramos, ahora estamos en Judex.</strong> Para más información y acceder a las nuevas herramientas de estudio, ingresa a:
+            </p>
+            <a 
+              href="https://www.judex.cl/examen-grado" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="migration-link"
+            >
+              🔗 judex.cl/examen-grado
+            </a>
+          </div>
+
           <h1>Examen de Grado Derecho</h1>
           <p className="subtitle">Asistente de Estudio Inteligente con Inteligencia Artificial</p>
           
